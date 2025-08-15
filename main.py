@@ -1,3 +1,11 @@
+# SQLite compatibility fix for Streamlit deployment
+import sys
+try:
+    import pysqlite3
+    sys.modules['sqlite3'] = pysqlite3
+except ImportError:
+    pass
+
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta

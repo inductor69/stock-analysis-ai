@@ -4,4 +4,5 @@ crewai_tools
 yfinance
 pandas
 numpy
+pysqlite3-binary
 
