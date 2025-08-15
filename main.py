@@ -26,6 +26,15 @@ llm = LLM(
             model="groq/gemma2-9b-it"
         )
 
+def format_indian_ticker(ticker: str) -> str:
+    """Format ticker for Indian markets (NSE/BSE)"""
+    ticker = ticker.upper().strip()
+    # If already has exchange suffix, return as is
+    if ticker.endswith('.NS') or ticker.endswith('.BO'):
+        return ticker
+    # Add .NS for NSE by default (most liquid market)
+    return f"{ticker}.NS"
+
 @tool
 def get_basic_stock_info(ticker: str) -> pd.DataFrame:
     """Retrieves basic information about a single stock.
@@ -34,7 +43,8 @@ def get_basic_stock_info(ticker: str) -> pd.DataFrame:
     Params:
     - ticker: The stock ticker symbol.
     """
-    stock = yf.Ticker(ticker)
+    formatted_ticker = format_indian_ticker(ticker)
+    stock = yf.Ticker(formatted_ticker)
     info = stock.info
     
     basic_info = pd.DataFrame({
@@ -61,7 +71,8 @@ def get_fundamental_analysis(ticker: str, period: str = '1y') -> pd.DataFrame:
     Returns: 
     - DataFrame with fundamental metrics.
     """
-    stock = yf.Ticker(ticker)
+    formatted_ticker = format_indian_ticker(ticker)
+    stock = yf.Ticker(formatted_ticker)
     
     # Fetch historical data for the given period
     history = stock.history(period=period)
@@ -100,7 +111,8 @@ def get_stock_risk_assessment(ticker: str, period: str = "1y") -> pd.DataFrame:
     - ticker: The stock ticker symbol.
     - period: The time period for historical data (default: "1y").
     """
-    stock = yf.Ticker(ticker)
+    formatted_ticker = format_indian_ticker(ticker)
+    stock = yf.Ticker(formatted_ticker)
     history = stock.history(period=period)
     
     # Calculate daily returns
@@ -108,7 +120,7 @@ def get_stock_risk_assessment(ticker: str, period: str = "1y") -> pd.DataFrame:
     
     # Calculate risk metrics
     volatility = returns.std() * np.sqrt(252)  # Annualized volatility
-    beta = calculate_beta(returns, '^GSPC', period)  # Beta relative to S&P 500
+    beta = calculate_beta(returns, '^NSEI', period)  # Beta relative to NSE Nifty 50
     var_95 = np.percentile(returns, 5)  # 95% Value at Risk
     max_drawdown = calculate_max_drawdown(history['Close'])
     
@@ -159,7 +171,8 @@ def get_technical_analysis(ticker: str, period: str = "") -> pd.DataFrame:
     - ticker: The stock ticker symbol.
     - period: The time period for historical data (available time-periods: ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]).
     """
-    stock = yf.Ticker(ticker)
+    formatted_ticker = format_indian_ticker(ticker)
+    stock = yf.Ticker(formatted_ticker)
     history = stock.history(period=period)
     
     # Calculate indicators
@@ -205,7 +218,8 @@ def get_stock_news(ticker: str, limit: int = 10) -> pd.DataFrame:
     - ticker: The stock ticker symbol.
     - limit: The number of news articles to fetch.
     """
-    stock = yf.Ticker(ticker)
+    formatted_ticker = format_indian_ticker(ticker)
+    stock = yf.Ticker(formatted_ticker)
     news = stock.news[:limit]
     
     news_data = []
@@ -425,7 +439,7 @@ st.set_page_config(page_title="Advanced Stock Analysis Dashboard", layout="wide"
 st.title("Advanced Stock Analysis Dashboard")
 
 st.sidebar.header("Stock Analysis Query")
-query = st.sidebar.text_area("Enter your stock analysis question", value="Is Apple a safe long-term bet for a risk-averse individual?", height=100)
+query = st.sidebar.text_area("Enter your stock analysis question", value="Is Reliance Industries (RELIANCE) a safe long-term bet for a risk-averse individual?", height=150)
 analyze_button = st.sidebar.button("Analyze")
 
 if analyze_button:
